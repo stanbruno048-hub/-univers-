@@ -31,3 +31,45 @@
     <script src="script.js"></script>
 </body>
 </html>
+let messages = JSON.parse(localStorage.getItem("messages")) || [];
+
+// Afficher les messages
+function displayMessages() {
+  const list = document.getElementById("messages");
+  list.innerHTML = "";
+
+  messages.forEach((m) => {
+    const li = document.createElement("li");
+    li.innerHTML = "<b>" + m.pseudo + ":</b> " + m.text;
+    list.appendChild(li);
+  });
+}
+
+// Envoyer un message
+function sendMessage() {
+  const pseudo = document.getElementById("pseudo").value;
+  const msg = document.getElementById("msg").value;
+
+  if (pseudo === "" || msg === "") {
+    alert("Remplis tous les champs !");
+    return;
+  }
+
+  const message = {
+    pseudo: pseudo,
+    text: msg,
+    time: new Date().toLocaleTimeString()
+  };
+
+  messages.push(message);
+
+  // Sauvegarder
+  localStorage.setItem("messages", JSON.stringify(messages));
+
+  document.getElementById("msg").value = "";
+
+  displayMessages();
+}
+
+// Charger au début
+displayMessages();
