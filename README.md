@@ -103,7 +103,7 @@ button {
   <button onclick="goLogin()">Entrer</button>
 </div>
 
-<!-- LOGIN -->
+<!-- chargement -->
 <div id="login" style="display:none;">
   <h2>Identification</h2>
   <input id="name" placeholder="Nom">
