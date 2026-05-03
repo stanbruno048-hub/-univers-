@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#25d366">
+  <title>Univers Chat</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Écran de connexion -->
+  <div id="loginScreen" class="screen active">
+    <div class="login-box">
+      <h1>Bienvenue sur Univers Chat</h1>
+      <p>Connecte-toi pour discuter</p>
+      <input type="text" id="pseudoInput" placeholder="Ton pseudo" maxlength="20">
+      <input type="tel" id="phoneInput" placeholder="Ton numéro de téléphone" maxlength="15">
+      <button id="btnConnexion">Entrer dans le chat</button>
+    </div>
+  </div>
+
+  <!-- Écran du chat -->
+  <div id="chatScreen" class="screen">
+    <header>
+      <h1>Univers Chat</h1>
+      <span id="userInfo"></span>
+      <button id="btnDeconnexion">Quitter</button>
+    </header>
+
+    <div class="messages" id="messages">
+      <div class="messages-wrapper" id="messagesWrapper"></div>
+    </div>
+
+    <div class="input-zone">
+      <div class="input-container">
+        <input type="text" id="messageInput" placeholder="Écris un message" autocomplete="off">
+        <button id="btnEnvoyer">Envoyer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
