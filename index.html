@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Univers Chat</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Arial;background:#111b21;color:#e9edef;height:100vh;overflow:hidden}
+   .screen{display:none;height:100vh;width:100%}
+   .screen.active{display:flex}
+
+    #welcomeScreen{justify-content:center;align-items:center;background:linear-gradient(135deg,#0c1317,#1f2c33);flex-direction:column;text-align:center}
+    #welcomeScreen h1{font-size:32px;color:#25d366;margin-bottom:30px}
+    #btnStart{padding:15px 40px;background:#25d366;border:none;border-radius:50px;font-weight:600;font-size:18px;color:#111b21;cursor:pointer}
+
+    #authScreen{justify-content:center;align-items:center;background:#0c1317}
+   .auth-box{background:#1f2c33;padding:40px 30px;border-radius:16px;width:90%;max-width:420px}
+   .auth-box h2{color:#e9edef;margin-bottom:20px;font-size:26px;text-align:center}
+   .auth-box input{width:100%;padding:14px;margin-bottom:15px;background:#2a3942;border:1px solid #374045;border-radius:10px;color:#e9edef;font-size:16px}
+   .auth-box button{width:100%;padding:15px;background:#25d366;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-size:16px;margin-top:5px}
+   .auth-box.toggle{margin-top:15px;text-align:center;color:#8696a0;font-size:14px}
+   .auth-box.toggle span{color:#25d366;cursor:pointer;font-weight:600}
+   .auth-box.error{color:#f15c6d;font-size:13px;margin-bottom:12px;text-align:center;display:none}
+   .auth-box.success{color:#25d366;font-size:13px;margin-bottom:12px;text-align:center;display:none}
+
+    #homeScreen{flex-direction:column;background:#111b21;position:relative}
+   .home-header{background:#1f2c33;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+   .home-header-left{display:flex;align-items:center;gap:12px}
+
+    /* AVATAR PROFIL ROND WHATSAPP STYLE */
+   .profile-avatar{width:40px;height:40px;background:#25d366;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;color:#111b21;font-size:16px;cursor:pointer;position:relative}
+   .profile-avatar:hover{opacity:0.9}
+
+   .home-header h1{font-size:20px;color:#e9edef;font-weight:500}
+   .home-header-right{display:flex;align-items:center;gap:15px}
+   .home-header-right svg{width:22px;height:22px;fill:#aebac1;cursor:pointer}
+
+   .home-content{flex:1;padding:0;overflow-y:auto}
+
+   .section-title{color:#e9edef;margin:15px 20px 12px;font-size:16px;font-weight:500}
+   .contacts-list{background:#111b21;padding:0}
+   .contact-item{display:flex;align-items:center;gap:12px;padding:12px 20px;cursor:pointer;transition:background 0.2s}
+   .contact-item:hover{background:#1f2c33}
+   .contact-avatar{width:48px;height:48px;background:#25d366;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;color:#111b21;font-size:18px;flex-shrink:0}
+   .contact-info{flex:1;border-bottom:1px solid #1f2c33;padding-bottom:12px}
+   .contact-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+   .contact-name{font-weight:400;font-size:17px;color:#e9edef}
+   .contact-time{font-size:12px;color:#8696a0}
+   .contact-lastmsg{font-size:14px;color:#8696a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+   .no-contacts{color:#8696a0;text-align:center;padding:40px 20px;font-size:14px}
+
+    /* BOUTON + FLOTTANT */
+   .fab{position:absolute;bottom:25px;right:25px;width:56px;height:56px;background:#25d366;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.4);transition:transform 0.2s;z-index:100}
+   .fab:hover{transform:scale(1.05)}
+   .fab:active{transform:scale(0.95)}
+   .fab svg{width:24px;height:24px;fill:#111b21}
+
+    /* MENU PROFIL */
+    #profileMenu{display:none;position:absolute;top:60px;left:10px;background:#1f2c33;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.5);z-index:200;min-width:200px;animation:fadeIn 0.15s}
+    #profileMenu.active{display:block}
+   .profile-menu-item{padding:14px 20px;color:#e9edef;cursor:pointer;font-size:15px;display:flex;align-items:center;gap:12px}
+   .profile-menu-item:hover{background:#2a3942}
+   .profile-menu-item svg{width:20px;height:20px;fill:#aebac1}
+   .profile-info{padding:16px 20px;border-bottom:1px solid #2a3942}
+   .profile-info-name{font-size:16px;color:#e9edef;font-weight:500;margin-bottom:4px}
+   .profile-info-phone{font-size:13px;color:#8696a0}
+
+    /* MODAL AJOUT CONTACT */
+    #contactModal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);justify-content:center;align-items:center;z-index:1000;animation:fadeIn 0.2s}
+    #contactModal.active{display:flex}
+   .modal-content{background:#1f2c33;padding:30px;border-radius:16px;width:90%;max-width:400px;animation:slideUp 0.3s}
+   .modal-content h3{color:#e9edef;margin-bottom:20px;font-size:20px}
+   .modal-content input{width:100%;padding:14px;margin-bottom:15px;background:#2a3942;border:1px solid #374045;border-radius:10px;color:#e9edef;font-size:16px}
+   .modal-content.modal-buttons{display:flex;gap:10px}
+   .modal-content button{flex:1;padding:14px;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-size:15px}
+    #btnValiderContact{background:#25d366;color:#111b21}
+    #btnAnnulerContact{background:#374045;color:#e9edef}
+   .modal-content.error{color:#f15c6d;font-size:13px;margin-bottom:10px;display:none}
+   .modal-content.success{color:#25d366;font-size:13px;margin-bottom:10px;display:none}
+
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+    #chatScreen{flex-direction:column;background:#0b141a}
+   .chat-header{background:#1f2c33;padding:12px 16px;display:flex;align-items:center;gap:12px}
+   .chat-header button{background:none;border:none;color:#e9edef;font-size:22px;cursor:pointer;padding:5px}
+   .chat-header h1{font-size:18px;color:#e9edef;flex:1}
+   .messages{flex:1;padding:20px;overflow-y:auto}
+   .messages-wrapper{max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+   .message{background:#1f2c33;padding:8px 12px 22px 12px;border-radius:8px 8px 8px 2px;max-width:65%;position:relative;word-wrap:break-word}
+   .message.moi{background:#005c4b;align-self:flex-end;border-radius:8px 8px 2px 8px}
+   .message.pseudo{font-weight:600;color:#53bdeb;font-size:12px;margin-bottom:3px}
+   .message-time{font-size:11px;color:#8696a0;position:absolute;bottom:5px;right:8px}
+   .input-zone{padding:8px;background:#1f2c33}
+   .input-container{max-width:800px;margin:0 auto;display:flex;gap:8px}
+    #messageInput{flex:1;padding:12px;background:#2a3942;border:none;border-radius:8px;color:#e9edef;font-size:16px}
+    #btnEnvoyer{padding:12px 18px;background:#25d366;border:none;border-radius:8px;font-weight:600;cursor:pointer}
+  </style>
+</head>
+<body>
+  <!-- ÉCRAN 1 : BIENVENUE -->
+  <div id="welcomeScreen" class="screen active">
+    <h1>Bienvenue sur Univers Chat</h1>
+    <button id="btnStart">Commencer</button>
+  </div>
+
+  <!-- ÉCRAN 2 : CONNEXION -->
+  <div id="authScreen" class="screen">
+    <div class="auth-box">
+      <h2 id="authTitle">Se connecter</h2>
+      <div class="error" id="authError"></div>
+      <div class="success" id="authSuccess"></div>
+      <input type="text" id="pseudoInput" placeholder="Pseudo">
+      <input type="tel" id="phoneInput" placeholder="Ton numéro de téléphone">
+      <input type="password" id="passwordInput" placeholder="Mot de passe">
+      <button id="btnAuth">Se connecter</button>
+      <div class="toggle">
+        <span id="toggleAuth">Pas encore de compte? S'inscrire</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN 3 : ACCUEIL + CONTACTS -->
+  <div id="homeScreen" class="screen">
+    <div class="home-header">
+      <div class="home-header-left">
+        <!-- AVATAR PROFIL ROND -->
+        <div class="profile-avatar" id="profileAvatar">U</div>
+        <h1>Univers Chat</h1>
+      </div>
+      <div class="home-header-right">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2.9-2 2.9 2 2 2zm0 2c-1.1 0-2.9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2.9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+      </div>
+    </div>
+
+    <div class="home-content">
+      <h3 class="section-title">Discussions</h3>
+      <div class="contacts-list" id="contactsList">
+        <div class="no-contacts">Aucune conversation pour le moment<br><span style="font-size:12px">Clique sur le + pour démarrer</span></div>
+      </div>
+    </div>
+
+    <!-- BOUTON + FLOTTANT -->
+    <button class="fab" id="btnFab">
+      <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+    </button>
+
+    <!-- MENU PROFIL -->
+    <div id="profileMenu">
+      <div class="profile-info">
+        <div class="profile-info-name" id="profileInfoName">Pseudo</div>
+        <div class="profile-info-phone" id="profileInfoPhone">Numéro</div>
+      </div>
+      <div class="profile-menu-item" id="btnLogout">
+        <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2.9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+        Déconnexion
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL AJOUT CONTACT -->
+  <div id="contactModal">
+    <div class="modal-content">
+      <h3>Nouvelle conversation</h3>
+      <div class="error" id="contactError"></div>
+      <div class="success" id="contactSuccess"></div>
+      <input type="text" id="friendPseudoInput" placeholder="Nom du contact">
+      <input type="tel" id="friendPhoneInput" placeholder="Numéro de téléphone">
+      <div class="modal-buttons">
+        <button id="btnAnnulerContact">Annuler</button>
+        <button id="btnValiderContact">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN 4 : CHAT -->
+  <div id="chatScreen" class="screen">
+    <div class="chat-header">
+      <button id="btnRetour">←</button>
+      <div class="contact-avatar" id="chatContactAvatar" style="width:40px;height:40px;font-size:16px;">C</div>
+      <h1 id="chatContactName">Contact</h1>
+    </div>
+    <div class="messages" id="messages">
+      <div class="messages-wrapper" id="messagesWrapper"></div>
+    </div>
+    <div class="input-zone">
+      <div class="input-container">
+        <input type="text" id="messageInput" placeholder="Écris un message" maxlength="500">
+        <button id="btnEnvoyer">Envoyer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBDskOrlsXNEkcQlGO4jdC5LMPcWICEF04",
+  authDomain: "univers-chat-a6303.firebaseapp.com",
+  databaseURL: "https://univers-chat-a6303-default-rtdb.firebaseio.com",
+  projectId: "univers-chat-a6303",
+  storageBucket: "univers-chat-a6303.firebasestorage.app",
+  messagingSenderId: "1019876595261",
+  appId: "1:1019876595261:web:7c67c74bc1426b1ca2bc54"
+};
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let isLoginMode = true;
+    let currentUser = null;
+    let contactActuel = null;
+    let ecouteurActuel = null;
+    let contacts = [];
+
+    // DOM
+    const welcomeScreen = document.getElementById("welcomeScreen");
+    const authScreen = document.getElementById("authScreen");
+    const homeScreen = document.getElementById("homeScreen");
+    const chatScreen = document.getElementById("chatScreen");
+    const contactModal = document.getElementById("contactModal");
+    const profileMenu = document.getElementById("profileMenu");
+    const btnStart = document.getElementById("btnStart");
+    const btnAuth = document.getElementById("btnAuth");
+    const btnLogout = document.getElementById("btnLogout");
+    const btnFab = document.getElementById("btnFab");
+    const btnValiderContact = document.getElementById("btnValiderContact");
+    const btnAnnulerContact = document.getElementById("btnAnnulerContact");
+    const btnRetour = document.getElementById("btnRetour");
+    const btnEnvoyer = document.getElementById("btnEnvoyer");
+    const toggleAuth = document.getElementById("toggleAuth");
+    const authTitle = document.getElementById("authTitle");
+    const pseudoInput = document.getElementById("pseudoInput");
+    const phoneInput = document.getElementById("phoneInput");
+    const passwordInput = document.getElementById("passwordInput");
+    const friendPseudoInput = document.getElementById("friendPseudoInput");
+    const friendPhoneInput = document.getElementById("friendPhoneInput");
+    const messageInput = document.getElementById("messageInput");
+    const messagesWrapper = document.getElementById("messagesWrapper");
+    const chatContactName = document.getElementById("chatContactName");
+    const chatContactAvatar = document.getElementById("chatContactAvatar");
+    const authError = document.getElementById("authError");
+    const authSuccess = document.getElementById("authSuccess");
+    const contactError = document.getElementById("contactError");
+    const contactSuccess = document.getElementById("contactSuccess");
+    const profileAvatar = document.getElementById("profileAvatar");
+    const profileInfoName = document.getElementById("profileInfoName");
+    const profileInfoPhone = document.getElementById("profileInfoPhone");
+    const contactsList = document.getElementById("contactsList");
+
+    // AUTO-CONNEXION + CHARGER CONTACTS LOCAUX
+    window.addEventListener("load", () => {
+      const savedUser = localStorage.getItem("universChatUser");
+      const savedContacts = localStorage.getItem("universChatContacts");
+      if (savedContacts) {
+        contacts = JSON.parse(savedContacts);
+      }
+      if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        showHomeScreen(currentUser);
+      }
+    });
+
+    // NAVIGATION
+    btnStart.addEventListener("click", () => {
+      welcomeScreen.classList.remove("active");
+      authScreen.classList.add("active");
+    });
+
+    toggleAuth.addEventListener("click", () => {
+      isLoginMode =!isLoginMode;
+      authTitle.textContent = isLoginMode? "Se connecter" : "S'inscrire";
+      btnAuth.textContent = isLoginMode? "Se connecter" : "S'inscrire";
+      toggleAuth.innerHTML = isLoginMode? 'Pas encore de compte? <span>S\'inscrire</span>' : 'Déjà un compte? <span>Se connecter</span>';
+      authError.style.display = "none";
+      authSuccess.style.display = "none";
+    });
+
+    // CONNEXION / INSCRIPTION
+    btnAuth.addEventListener("click", () => {
+      const pseudo = pseudoInput.value.trim();
+      const phone = phoneInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (!pseudo ||!phone ||!password) {
+        showAuthError("Remplis tous les champs");
+        return;
+      }
+
+      currentUser = { pseudo, phone, password };
+      localStorage.setItem("universChatUser", JSON.stringify(currentUser));
+      showSuccess(isLoginMode? "Connexion réussie!" : "Compte créé!");
+      setTimeout(() => showHomeScreen(currentUser), 800);
+    });
+
+    function showHomeScreen(userData) {
+      welcomeScreen.classList.remove("active");
+      authScreen.classList.remove("active");
+      homeScreen.classList.add("active");
+      profileAvatar.textContent = userData.pseudo.charAt(0).toUpperCase();
+      profileInfoName.textContent = userData.pseudo;
+      profileInfoPhone.textContent = userData.phone;
+      pseudoInput.value = phoneInput.value = passwordInput.value = "";
+      afficherContacts();
+    }
+
+    // MENU PROFIL
+    profileAvatar.addEventListener("click", (e) => {
+      e.stopPropagation();
+      profileMenu.classList.toggle("active");
+    });
+
+    document.addEventListener("click", () => {
+      profileMenu.classList.remove("active");
+    });
+
+    btnLogout.addEventListener("click", () => {
+      localStorage.removeItem("universChatUser");
+      homeScreen.classList.remove("active");
+      welcomeScreen.classList.add("active");
+      currentUser = null;
+      contacts = [];
+      localStorage.removeItem("universChatContacts");
+      if (ecouteurActuel) ecouteurActuel.off();
+      profileMenu.classList.remove("active");
+    });
+
+    // MODAL AJOUT CONTACT
+    btnFab.addEventListener("click", () => {
+      contactModal.classList.add("active");
+      friendPseudoInput.value = "";
+      friendPhoneInput.value = "";
+      contactError.style.display = "none";
+      contactSuccess.style.display = "none";
+      friendPseudoInput.focus();
+    });
+
+    btnAnnulerContact.addEventListener("click", () => {
+      contactModal.classList.remove("active");
+    });
+
+    contactModal.addEventListener("click", (e) => {
+      if (e.target === contactModal) {
+        contactModal.classList.remove("active");
+      }
+    });
+
+    // ENREGISTRER LE CONTACT EN LOCALSTORAGE
+    btnValiderContact.addEventListener("click", () => {
+      const friendPseudo = friendPseudoInput.value.trim();
+      const friendPhone = friendPhoneInput.value.trim();
+
+      if (!friendPseudo ||!friendPhone) {
+        showContactError("Remplis le nom et le numéro");
+        return;
+      }
+      if (friendPhone === currentUser.phone) {
+        showContactError("Tu ne peux pas t'ajouter toi-même");
+        return;
+      }
+
+      const contactExiste = contacts.find(c => c.phone === friendPhone);
+      if (contactExiste) {
+        showContactSuccess("Contact déjà enregistré");
+        setTimeout(() => {
+          contactModal.classList.remove("active");
+          openChat(contactExiste);
+        }, 800);
+        return;
+      }
+
+      const newContact = {
+        pseudo: friendPseudo,
+        phone: friendPhone,
+        added_at: Date.now(),
+        lastMessage: "",
+        lastMessageTime: 0
+      };
+
+      contacts.push(newContact);
+      localStorage.setItem("universChatContacts", JSON.stringify(contacts));
+
+      showContactSuccess("Contact enregistré!");
+      setTimeout(() => {
+        contactModal.classList.remove("active");
+        afficherContacts();
+        openChat(newContact);
+      }, 800);
+    });
+
+    friendPhoneInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") btnValiderContact.click();
+    });
+
+    // AFFICHER LES CONTACTS
+    function afficherContacts() {
+      contactsList.innerHTML = "";
+
+      if (contacts.length === 0) {
+        contactsList.innerHTML = '<div class="no-contacts">Aucune conversation pour le moment<br><span style="font-size:12px">Clique sur le + pour démarrer</span></div>';
+        return;
+      }
+
+      contacts.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+
+      contacts.forEach((contact) => {
+        const contactDiv = document.createElement("div");
+        contactDiv.className = "contact-item";
+        const time = contact.lastMessageTime? new Date(contact.lastMessageTime).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}) : "";
+        contactDiv.innerHTML = `
+          <div class="contact-avatar">${contact.pseudo.charAt(0).toUpperCase()}</div>
+          <div class="contact-info">
+            <div class="contact-top">
+              <div class="contact-name">${contact.pseudo}</div>
+              <div class="contact-time">${time}</div>
+            </div>
+            <div class="contact-lastmsg">${contact.lastMessage || contact.phone}</div>
+          </div>
+        `;
+        contactDiv.addEventListener("click", () => openChat(contact));
+        contactsList.appendChild(contactDiv);
+      });
+    }
+
+    function openChat(contact) {
+      homeScreen.classList.remove("active");
+      chatScreen.classList.add("active");
+      chatContactName.textContent = contact.pseudo;
+      chatContactAvatar.textContent = contact.pseudo.charAt(0).toUpperCase();
+      contactActuel = contact;
+      chargerConversation(contact.pseudo);
+    }
+
+    btnRetour.addEventListener("click", () => {
+      chatScreen.classList.remove("active");
+      homeScreen.classList.add("active");
+      messagesWrapper.innerHTML = "";
+      if (ecouteurActuel) ecouteurActuel.off();
+      contactActuel = null;
+    });
+
+    // ENVOYER MESSAGE
+    btnEnvoyer.addEventListener("click", envoyerMessage);
+    messageInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") envoyerMessage();
+    });
+
+    async function envoyerMessage() {
+      const texte = messageInput.value.trim();
+      if (!texte ||!contactActuel) return;
+
+      const conversationId = [currentUser.pseudo, contactActuel.pseudo].sort().join("_");
+      const now = Date.now();
+
+      try {
+        await push(ref(db, "messages"), {
+          conversationId: conversationId,
+          pseudo: currentUser.pseudo,
+          phone: currentUser.phone,
+          texte: texte,
+          created_at: now
+        });
+
+        const contactIndex = contacts.findIndex(c => c.phone === contactActuel.phone);
+        if (contactIndex!== -1) {
+          contacts[contactIndex].lastMessage = texte;
+          contacts[contactIndex].lastMessageTime = now;
+          localStorage.setItem("universChatContacts", JSON.stringify(contacts));
+          afficherContacts();
+        }
+
+        messageInput.value = "";
+      } catch (err) {
+        alert("Erreur envoi : " + err.message);
+      }
+    }
+
+    function chargerConversation(contactPseudo) {
+      const conversationId = [currentUser.pseudo, contactPseudo].sort().join("_");
+      const messagesQuery = query(ref(db, "messages"), orderByChild("conversationId"), equalTo(conversationId));
+
+      messagesWrapper.innerHTML = "";
+
+      if (ecouteurActuel) ecouteurActuel.off();
+
+      ecouteurActuel = onChildAdded(messagesQuery, (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+        const div = document.createElement("div");
+        div.className = "message" + (data.pseudo === currentUser.pseudo? " moi" : "");
+        const date = new Date(data.created_at);
+        const heure = `${date.getHours().toString().padStart(2,"0")}:${date.getMinutes().toString().padStart(2,"0")}`;
+        div.innerHTML = `<div class="pseudo">${data.pseudo}</div><div>${data.texte}</div><span class="message-time">${heure}</span>`;
+        messagesWrapper.appendChild(div);
+        messagesWrapper.scrollTop = messagesWrapper.scrollHeight;
+      });
+    }
+
+    function showAuthError(msg) {
+      authError.textContent = msg;
+      authError.style.display = "block";
+      authSuccess.style.display = "none";
+    }
+
+    function showSuccess(msg) {
+      authSuccess.textContent = msg;
+      authSuccess.style.display = "block";
+      authError.style.display = "none";
+    }
+
+    function showContactError(msg) {
+      contactError.textContent = msg;
+      contactError.style.display = "block";
+      contactSuccess.style.display = "none";
+    }
+
+    function showContactSuccess(msg) {
+      contactSuccess.textContent = msg;
+      contactSuccess.style.display = "block";
+      contactError.style.display = "none";
+    }
+
+    passwordInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") btnAuth.click();
+    });
+  </script>
+</body>
+</html>
