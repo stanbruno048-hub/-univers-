@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Univers Chat</title>
+<style>
+    * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  body {
+    background: #0a1014;
+    color: white;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+.screen {
+    height: 100vh;
+    width: 100vw;
+    display: none;
+    flex-direction: column;
+  }
+
+.screen.active {
+    display: flex;
+  }
+
+.center {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 20px;
+  }
+
+  h1 {
+    font-size: 32px;
+    color: #25D366;
+  }
+
+  button {
+    padding: 12px 24px;
+    background: #25D366;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  input {
+    width: 80%;
+    max-width: 300px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #2a3942;
+    background: #1f2c33;
+    color: white;
+    font-size: 15px;
+    outline: none;
+  }
+
+  input:focus {
+    border-color: #25D366;
+  }
+
+.header {
+    height: 60px;
+    background: #1f2c33;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    border-bottom: 1px solid #2a3942;
+  }
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+.profile-round {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #25D366;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+.tab-bar {
+    height: 50px;
+    background: #1f2c33;
+    display: flex;
+    border-bottom: 1px solid #2a3942;
+  }
+
+.tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8696a0;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+.tab.active {
+    color: #25D366;
+    border-bottom: 2px solid #25D366;
+  }
+
+.contacts {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+  }
+
+.fab {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #25D366;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    cursor: pointer;
+    z-index: 5;
+  }
+
+.fab:hover {
+    opacity: 0.9;
+  }
+
+.contact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #1f2c33;
+    cursor: pointer;
+  }
+
+.contact:hover {
+    background: #1f2c33;
+  }
+
+.avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #25D366;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 20px;
+  }
+
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1f2c33;
+    padding: 20px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 10;
+  }
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    z-index: 9;
+  }
+
+.overlay.active {
+    display: block;
+  }
+
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    background: #0a1014;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+.msg {
+    display: flex;
+  }
+
+.msg.me {
+    justify-content: flex-end;
+  }
+
+.bubble {
+    max-width: 70%;
+    padding: 8px 12px;
+    border-radius: 18px;
+    position: relative;
+    word-wrap: break-word;
+  }
+
+.msg.me.bubble {
+    background: #25D366;
+    color: #000;
+  }
+
+.msg.them.bubble {
+    background: #2a3942;
+    color: white;
+  }
+
+.msg.me.bubble::after {
+    content: "";
+    position: absolute;
+    right: -6px;
+    top: 10px;
+    border: 6px solid transparent;
+    border-left-color: #25D366;
+  }
+
+.msg.them.bubble::after {
+    content: "";
+    position: absolute;
+    left: -6px;
+    top: 10px;
+    border: 6px solid transparent;
+    border-right-color: #2a3942;
+  }
+
+.time {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-left: 8px;
+  }
+
+.inputBar {
+    display: flex;
+    padding: 10px;
+    background: #1f2c33;
+    gap: 8px;
+  }
+
+.inputBar input {
+    flex: 1;
+    max-width: none;
+  }
+
+.sendBtn {
+    padding: 0 16px;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+  }
+
+.backBtn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 22px;
+    padding: 0;
+  }
+
+.link {
+    color: #25D366;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-top: 10px;
+  }
+
+.error {
+    color: #ff6b6b;
+    font-size: 14px;
+    margin-top: -10px;
+  }
+
+.archive-item {
+    padding: 16px;
+    border-bottom: 1px solid #1f2c33;
+    cursor: pointer;
+  }
+
+.archive-item:hover {
+    background: #1f2c33;
+  }
+</style>
+</head>
+<body>
+
+<!-- Écran Bienvenue -->
+<div id="welcome" class="screen center active">
+  <h1>Bienvenue sur Univers Chat</h1>
+  <p>Discute avec tes amis simplement</p>
+  <button onclick="showScreen('auth')">Commencer</button>
+</div>
+
+<!-- Écran Auth -->
+<div id="auth" class="screen center">
+  <h2 id="authTitle">Connexion</h2>
+  <input id="pseudo" placeholder="Pseudo" style="display:none;">
+  <input id="phone" placeholder="Numéro de téléphone" type="tel">
+  <input id="password" type="password" placeholder="Mot de passe 6 caractères min">
+  <div id="errorMsg" class="error"></div>
+  <button onclick="handleAuth()">Se connecter</button>
+  <div class="link" onclick="toggleAuth()">Créer un compte</div>
+</div>
+
+<!-- Écran Liste Contacts -->
+<div id="chatList" class="screen">
+  <div class="header">
+    <div class="header-left">
+      <div class="profile-round" id="profileBtn" onclick="showScreen('profile')">U</div>
+      <h3>Univers Chat</h3>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('chats')">Discussions</div>
+    <div class="tab" onclick="switchTab('archive')">Archive</div>
+  </div>
+
+  <div id="chatsTab" class="contacts">
+    <div id="contacts"></div>
+    <div class="fab" onclick="openModal()">+</div>
+  </div>
+
+  <div id="archiveTab" class="contacts" style="display:none;">
+    <div class="archive-item" onclick="alert('Fonction: Vider tous les chats')">🗑️ Vider tous les chats</div>
+    <div class="archive-item" onclick="alert('Fonction: Bloquer un contact')">🚫 Bloquer un contact</div>
+    <div class="archive-item" onclick="alert('Fonction: Exporter les messages')">📤 Exporter les messages</div>
+    <div class="archive-item" onclick="alert('Fonction: Mode sombre/clair')">🌙 Changer le thème</div>
+    <div class="archive-item" onclick="logout()">🚪 Se déconnecter</div>
+  </div>
+</div>
+
+<!-- Écran Profil -->
+<div id="profile" class="screen">
+  <div class="header">
+    <button class="backBtn" onclick="showScreen('chatList')">←</button>
+    <h4>Profil</h4>
+  </div>
+  <div class="center" style="flex:1;">
+    <div class="profile-round" style="width:100px; height:100px; font-size:40px;" id="profileBig">U</div>
+    <h2 id="profileName">Utilisateur</h2>
+    <p id="profilePhone" style="opacity:0.7;"></p>
+  </div>
+</div>
+
+<!-- Écran Chat -->
+<div id="chatRoom" class="screen">
+  <div class="header">
+    <button class="backBtn" onclick="showScreen('chatList')">←</button>
+    <h4 id="chatWithName">Contact</h4>
+  </div>
+  <div id="messages" class="messages"></div>
+  <div class="inputBar">
+    <input id="msgInput" placeholder="Message" onkeypress="if(event.key==='Enter') sendMessage()">
+    <button class="sendBtn" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<!-- Modal Ajouter Ami -->
+<div id="overlay" class="overlay" onclick="closeModal()"></div>
+<div id="addModal" class="modal" style="display:none;">
+  <h3>Ajouter un ami</h3>
+  <input id="newFriendPhone" placeholder="Numéro de l'ami" type="tel">
+  <button onclick="addFriend()">Ajouter</button>
+  <button style="background:#555" onclick="closeModal()">Annuler</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  updateProfile,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+  serverTimestamp,
+  doc,
+  setDoc,
+  updateDoc,
+  arrayUnion,
+  getDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// METS TA CONFIG FIREBASE ICI
+const firebaseConfig = {
+  apiKey: "AIzaSyBDskOrlsXNEkcQlGO4jdC5LMPcWICEF04",
+  authDomain: "univers-chat-a6303.firebaseapp.com",
+  databaseURL: "https://univers-chat-a6303-default-rtdb.firebaseio.com",
+  projectId: "univers-chat-a6303",
+  storageBucket: "univers-chat-a6303.firebasestorage.app",
+  messagingSenderId: "1019876595261",
+  appId: "1:1019876595261:web:7c67c74bc1426b1ca2bc54"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+let currentChatFriend = null;
+let chatId = null;
+let unsubscribeMessages = null;
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    updateProfileUI(user);
+    showScreen('chatList');
+    loadFriends();
+  }
+});
+
+function updateProfileUI(user) {
+  const initial = user.displayName? user.displayName[0].toUpperCase() : 'U';
+  document.getElementById('profileBtn').textContent = initial;
+  document.getElementById('profileBig').textContent = initial;
+  document.getElementById('profileName').textContent = user.displayName || 'Utilisateur';
+  document.getElementById('profilePhone').textContent = user.email.split('@')[0];
+}
+
+window.showScreen = function(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+  document.getElementById('errorMsg').textContent = '';
+}
+
+window.switchTab = function(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+
+  if (tab === 'chats') {
+    document.getElementById('chatsTab').style.display = 'block';
+    document.getElementById('archiveTab').style.display = 'none';
+  } else {
+    document.getElementById('chatsTab').style.display = 'none';
+    document.getElementById('archiveTab').style.display = 'block';
+  }
+}
+
+let isLogin = true;
+window.toggleAuth = function() {
+  isLogin =!isLogin;
+  document.getElementById('authTitle').textContent = isLogin? 'Connexion' : 'Inscription';
+  document.getElementById('pseudo').style.display = isLogin? 'none' : 'block';
+  document.querySelector('#auth button').textContent = isLogin? 'Se connecter' : "S'inscrire";
+  document.querySelector('.link').textContent = isLogin? 'Créer un compte' : 'Déjà un compte?';
+  document.getElementById('errorMsg').textContent = '';
+}
+
+function cleanPhone(phone) {
+  return phone.replace(/[\s+\-()]/g, '');
+}
+
+window.handleAuth = async function() {
+  const phone = cleanPhone(document.getElementById('phone').value);
+  const password = document.getElementById('password').value;
+  const pseudo = document.getElementById('pseudo').value;
+  const errorDiv = document.getElementById('errorMsg');
+  errorDiv.textContent = '';
+
+  if (!phone) {
+    errorDiv.textContent = "Entre un numéro de téléphone";
+    return;
+  }
+
+  if (password.length < 6) {
+    errorDiv.textContent = "Le mot de passe doit faire 6 caractères minimum";
+    return;
+  }
+
+  const email = phone + "@universchat.com";
+
+  try {
+    if (isLogin) {
+      await signInWithEmailAndPassword(auth, email, password);
+    } else {
+      if (!pseudo) {
+        errorDiv.textContent = "Entre un pseudo";
+        return;
+      }
+      const res = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(res.user, { displayName: pseudo });
+      await setDoc(doc(db, "users", res.user.uid), {
+        pseudo,
+        phone,
+        uid: res.user.uid,
+        friends: []
+      });
+    }
+  } catch (e) {
+    if (e.code === 'auth/invalid-email') {
+      errorDiv.textContent = "Numéro invalide";
+    } else if (e.code === 'auth/wrong-password') {
+      errorDiv.textContent = "Mot de passe incorrect";
+    } else if (e.code === 'auth/user-not-found') {
+      errorDiv.textContent = "Aucun compte avec ce numéro";
+    } else if (e.code === 'auth/email-already-in-use') {
+      errorDiv.textContent = "Ce numéro est déjà utilisé";
+    } else {
+      errorDiv.textContent = "Erreur: " + e.message;
+    }
+  }
+}
+
+window.openModal = function() {
+  document.getElementById('overlay').classList.add('active');
+  document.getElementById('addModal').style.display = 'flex';
+}
+
+window.closeModal = function() {
+  document.getElementById('overlay').classList.remove('active');
+  document.getElementById('addModal').style.display = 'none';
+}
+
+window.addFriend = async function() {
+  const phone = cleanPhone(document.getElementById('newFriendPhone').value);
+  const q = query(collection(db, "users"), where("phone", "==", phone));
+  const snap = await getDocs(q);
+
+  if (!snap.empty) {
+    const friend = snap.docs[0].data();
+    await updateDoc(doc(db, "users", currentUser.uid), {
+      friends: arrayUnion(friend)
+    });
+    loadFriends();
+    closeModal();
+    document.getElementById('newFriendPhone').value = "";
+  } else {
+    alert("Utilisateur introuvable");
+  }
+}
+
+async function loadFriends() {
+  const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+  const friends = userDoc.data().friends || [];
+  const container = document.getElementById('contacts');
+
+  if (friends.length === 0) {
+    container.innerHTML = '<p style="text-align:center; margin-top:20px; opacity:0.6;">Aucun contact. Clique sur + pour ajouter un ami.</p>';
+    return;
+  }
+
+  container.innerHTML = friends.map(f => `
+    <div class="contact" onclick="openChat('${f.uid}', '${f.pseudo}')">
+      <div class="avatar">${f.pseudo[0].toUpperCase()}</div>
+      <div>${f.pseudo}</div>
+    </div>
+  `).join('');
+}
+
+window.openChat = async function(friendUid, friendPseudo) {
+  currentChatFriend = { uid: friendUid, pseudo: friendPseudo };
+  chatId = [currentUser.uid, friendUid].sort().join("_");
+  document.getElementById('chatWithName').textContent = friendPseudo;
+  showScreen('chatRoom');
+
+  if (unsubscribeMessages) unsubscribeMessages();
+
+  const q = query(
+    collection(db, "chats", chatId, "messages"),
+    orderBy("createdAt")
+  );
+
+  unsubscribeMessages = onSnapshot(q, (snap) => {
+    const container = document.getElementById('messages');
+    container.innerHTML = snap.docs.map(doc => {
+      const msg = doc.data();
+      const isMe = msg.senderId === currentUser.uid;
+      const time = msg.createdAt?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || '';
+
+      return `
+        <div class="msg ${isMe? 'me' : 'them'}">
+          <div class="bubble">
+            ${msg.text}
+            <span class="time">${time}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.scrollTop = container.scrollHeight;
+  });
+}
+
+window.sendMessage = async function() {
+  const text = document.getElementById('msgInput').value.trim();
+  if (!text ||!chatId) return;
+
+  await addDoc(collection(db, "chats", chatId, "messages"), {
+    text,
+    senderId: currentUser.uid,
+    createdAt: serverTimestamp()
+  });
+
+  document.getElementById('msgInput').value = "";
+}
+
+window.logout = async function() {
+  await signOut(auth);
+  showScreen('welcome');
+}
+</script>
+</body>
+</html>
